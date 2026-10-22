@@ -28,395 +28,270 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-
-Set Printing Notations.
-Unset Printing Implicit.
-Unset Printing Coercions.
-Unset Printing Universes.
-Unset Printing All.
-
-
-
-
 Section pos_proof.
-
-
-
-
-
-
-
-  Local Open Scope ereal_scope.
-
-  Local Open Scope classical_set_scope.
-  Local Open Scope ring_scope.
-  Local Open Scope schedule_scope.
-  Let R := Rdefinitions.R.
-  Context {d} (T : measurableType d)  (P : probability T R).
-
-  Variable Sc : nat.
-  Hypothesis n_sup_O: (0 < Sc)%nat.
+Local Open Scope ereal_scope.
+Local Open Scope classical_set_scope.
+Local Open Scope ring_scope.
+Local Open Scope schedule_scope.
+Let R := Rdefinitions.R.
+Context {d} (T : measurableType d)  (P : probability T R) (Sc : nat).
+Hypothesis n_sup_O: (0 < Sc)%nat.
 
 
   (* Probabilities for LuckySlot, SuperSlot and AversarialSlot*)
-  Variable pLs pSs pAs : R.
-  Hypothesis pLs01 : (0 <= pLs <= 1)%R.
-  Hypothesis pSs01 : (0 <= pSs <= 1)%R.
-  Hypothesis pAs01 : (0 <= pAs <= 1)%R.
+Context (pLs pSs pAs : R).
+Hypothesis pLs01 : (0 <= pLs <= 1)%R.
+Hypothesis pSs01 : (0 <= pSs <= 1)%R.
+Hypothesis pAs01 : (0 <= pAs <= 1)%R.
 
   (*tuple of boolean values to model a multiple bernoulli draw*)
-  Variable LS : Sc.-tuple (bernoulliRV P pLs).
-  Variable SS : Sc.-tuple (bernoulliRV P pSs).
-  Variable AS : Sc.-tuple (bernoulliRV P pAs).
+Context (LS : Sc.-tuple (bernoulliRV P pLs))
+  (SS : Sc.-tuple (bernoulliRV P pSs))
+  (AS : Sc.-tuple (bernoulliRV P pAs)).
 
-  Definition LS_r := bool_trial_value LS.
-  Definition SS_r := bool_trial_value SS.
-  Definition AS_r := bool_trial_value AS.
+Definition LS_r := bool_trial_value LS.
+Definition SS_r := bool_trial_value SS.
+Definition AS_r := bool_trial_value AS.
 
   (*Delta assumptions*)
-  Variable deltaLs deltaSs deltaAs : R.
-  Hypothesis delta_range_Ls : (0 < deltaLs < 1)%R.
-  Hypothesis delta_range_Ss : (0 < deltaSs < 1)%R.
-  Hypothesis delta_range_As : (0 < deltaAs < 1)%R.
+Context (deltaLs deltaSs deltaAs : R).
+Hypothesis delta_range_Ls : (0 < deltaLs < 1)%R.
+Hypothesis delta_range_Ss : (0 < deltaSs < 1)%R.
+Hypothesis delta_range_As : (0 < deltaAs < 1)%R.
 
-
-
-  Check (sampling_ineq3 pLs01 LS delta_range_Ls).
-  Check (sampling_ineq3 pSs01 SS  delta_range_Ss).
-  Check (sampling_ineq2 pAs01 AS n_sup_O delta_range_As).
-
-
-  Search (honest_advantage_ranges_gt _ _).
-
-  Section ChainGrowth.
+Section ChainGrowth.
 
     (*GlobalStates assumptions*)
-    Variables (N N' : GlobalState).
-    Hypothesis N_from_initial : N0 ⇓ N .
-    Hypothesis N_is_ready : N @ Ready.
-    Hypothesis N'_from_N :  N ⇓^+ N'.
+Context (N N' : GlobalState).
+Hypothesis N_from_initial : N0 ⇓ N .
+Hypothesis N_is_ready : N @ Ready.
+Hypothesis N'_from_N :  N ⇓^+ N'.
 
-    (*party assumptions corresponding to CG assumptions for now*)
-    Variables (p1 p2 : Party).
-    Hypothesis p1_honest : is_honest p1.
-    Hypothesis p2_honest : is_honest p2.
+(*party assumptions corresponding to CG assumptions for now*)
+Context (p1 p2 : Party).
+Hypothesis p1_honest : is_honest p1.
+Hypothesis p2_honest : is_honest p2.
 
-    (*LocalState assumption to ling p1 and l1 to N, and p2 and l2 to N'*)
-    Variable (l1 l2 : LocalState).
-    Hypothesis l1_p1_state : has_state p1 N l1.
-    Hypothesis l2_p2_state : has_state p2 N' l2.
+(*LocalState assumption to ling p1 and l1 to N, and p2 and l2 to N'*)
+Context (l1 l2 : LocalState).
+Hypothesis l1_p1_state : has_state p1 N l1.
+Hypothesis l2_p2_state : has_state p2 N' l2.
 
-    (*Assumption to link the bool_trial_value LS to the amount of lucky slots
-      between N and N'*)
-    Hypothesis LS_r_eq_slotrange : forall r, (LS_r r  = | lucky_slots_range
-      (t_now N) (t_now N' - 1) |%:R)%N.
+(*Assumption to link the bool_trial_value LS to the amount of lucky slots
+  between N and N'*)
+Hypothesis LS_r_eq_slotrange : forall r, (LS_r r  = | lucky_slots_range
+  (t_now N) (t_now N' - 1) |%:R)%N.
 
+Definition tuple_interval_index {T : Type} (a b n : nat) (t : n.-tuple T) :=
+drop a (take b t).
 
+Lemma tuple_sub_size {X : Type} (a b : nat) (t : Sc.-tuple X) (Hab : (a <
+  b)%N) (Hb : (b <= Sc)%N) :
+size (take (b - a)%N (drop a (tval t))) == (b - a)%N.
+Proof.
+rewrite size_take size_drop size_tuple.
+exact/eqP/minn_idPl/leq_sub2r.
+Qed.
 
+Lemma tuple_interval_index_try {X : Type} (a b n : nat) (t : n.-tuple X)
+   (Hab : (a < b)%N) (Hb : (b <= n)%N) :
+size (drop a (take b (tval t))) == (b - a)%N.
+Proof.
+by rewrite size_drop size_take size_tuple -/(minn b n) (minn_idPl Hb).
+Qed.
 
-    Definition tuple_interval_index {T : Type} (a b n : nat) (t : n.-tuple T) :=
-    drop a (take b t).
+Definition tuple_interval_index_fun ( a b n : nat) (t : n.-tuple T)
+    (Hab : (a < b)%N) (Hb : (b <= n)%N) : ((b - a)%N).-tuple T
+  := Tuple (tuple_interval_index_try t Hab Hb).
 
-    Lemma tuple_sub_size {X : Type} (a b : nat) (t : Sc.-tuple X) (Hab : (a <
-      b)%N) (Hb : (b <= Sc)%N) :
-    size (take (b - a)%N (drop a (tval t))) == (b - a)%N.
-    Proof.
-      apply/eqP.
-      rewrite size_take size_drop size_tuple.
-      apply: minn_idPl.
-      rewrite leq_sub2r //=.
-    Qed.
+Lemma Sc_pos_R : (0 < (Sc%:R : R))%R.
+Proof. by rewrite ltr0n. Qed.
 
-
-
-
-     Lemma tuple_interval_index_try {X : Type} (a b n : nat) (t : n.-tuple X)
-       (Hab : (a < b)%N) (Hb : (b <= n)%N) :
-    size (drop a (take b (tval t))) == (b - a)%N.
-    Proof.
-      apply/eqP.
-      rewrite size_drop size_take size_tuple.
-      rewrite -/(minn b n).
-      by rewrite (minn_idPl Hb).
-    Qed.
-
-    Definition tuple_interval_index_fun ( a b n : nat) (t : n.-tuple T)
-    (Hab : (a < b)%N) (Hb : (b <= n)%N) : ((b - a)%N).-tuple T :=
-    Tuple (tuple_interval_index_try t Hab Hb).
-
-
-
-
-
-
-    Lemma Sc_pos_R : (0 < (Sc%:R : R))%R.
-    Proof.
-      by rewrite ltr0n.
-    Qed.
-    Lemma complementary_specialized_LS :
-    let X' := bool_trial_value LS in
+Lemma complementary_specialized_LS :
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (\X_Sc P) [set i | ~~ (X' i <= (1 - deltaLs) * fine mu)%R ]%R
+      (\X_Sc P) [set i | ~~ (X' i <= (1 - deltaLs) * fine mu)%R ]%R
     =
-      let X' := bool_trial_value LS in
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E -
-      (\X_Sc P) [set i | X' i <= (1 - deltaLs) * fine mu ]%R))%E.
-    Proof.
-      move=> X' mu.
-      by rewrite complementary_specialized_le.
-    Qed.
+      (((1%R)%:E - (\X_Sc P) [set i | X' i <= (1 - deltaLs) * fine mu ]%R))%E.
+Proof. by move=>??; rewrite complementary_specialized_le. Qed.
 
-
-
-
-    Lemma complementary_Ls_Bound :
-    let X' := bool_trial_value LS in
+Lemma complementary_Ls_Bound :
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (\X_Sc P) [set i | (1 - deltaLs) * fine mu <  X' i ]%R
+      (\X_Sc P) [set i | (1 - deltaLs) * fine mu <  X' i ]%R
     =
-    let X' := bool_trial_value LS in
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E - (\X_Sc P) [set i | X' i <= (1 - deltaLs) * fine mu ]%R))%E.
+      (((1%R)%:E - (\X_Sc P) [set i | X' i <= (1 - deltaLs) * fine mu ]%R))%E.
+Proof.
+by move=> ??; rewrite -complementary_specialized_LS set_gt_as_compl_le.
+Qed.
 
-    Proof.
-      move=> X' mu.
-      rewrite -complementary_specialized_LS .
-      by rewrite set_gt_as_compl_le.
-    Qed.
-
-
-
-
-    Theorem chain_growth_bound :
-    let X' := bool_trial_value LS in
+Theorem chain_growth_bound :
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E - (expR (-(fine mu * deltaLs ^+ 2) / 2)%R)%:E)%E
+      (((1%R)%:E - (expR (-(fine mu * deltaLs ^+ 2) / 2)%R)%:E)%E
     <=
-    (\X_Sc P) [set i | (1 - deltaLs) * fine mu < X' i]%R)%E.
-    Proof.
-      rewrite /=.
-      have H1:= (sampling_ineq3 pLs01 LS delta_range_Ls).
-      rewrite complementary_Ls_Bound /=.
-      rewrite /= in H1.
-      set X' := bool_trial_value LS.
-      set mu := 'E_(\X_Sc P)[X'].
-      rewrite /mu -leeN2 in H1.
-      rewrite /mu.
-      by apply: leeD2l H1.
-    Qed.
+  (\X_Sc P) [set i | (1 - deltaLs) * fine mu < X' i]%R)%E.
+Proof.
+have := (sampling_ineq3 pLs01 LS delta_range_Ls).
+rewrite /= complementary_Ls_Bound -leeN2.
+by apply: leeD2l.
+Qed.
 
-    Definition Chain_growth_ls_Good_event :=
-    let X' := bool_trial_value LS in
+Definition Chain_growth_ls_Good_event :=
+let X' := bool_trial_value LS in
+let mu := 'E_(\X_Sc P)[X'] in
+[set r | ((1 - deltaLs) * fine mu < X' r)%R].
+
+Definition chain_growth_parties_event (w : nat)  :=
+let X' := bool_trial_value LS in
+[set r : Sc.-tuple T | ((|bestChain (t_now N - 1)%N (tree l1)| + w)%N <=
+  |bestChain (t_now N' - 1)%N (tree l2)|)%N].
+
+Lemma Good_Ls_implies_chain_growth w :
+let X' := bool_trial_value LS in
+let mu := 'E_(\X_Sc P)[X'] in
+w%:R <= (1 - deltaLs) * fine mu
+->
+(forall r , Chain_growth_ls_Good_event r-> chain_growth_parties_event w r).
+Proof.
+move=> X' mu H1 r /ltW H2.
+apply: (chain_growth_parties (p1 := p1) (p2 := p2))=>//.
+rewrite -(ler_nat R) -(LS_r_eq_slotrange r).
+exact/(le_trans H1).
+Qed.
+
+Lemma probability_implication (w : nat) :
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    [set r | ((1 - deltaLs) * fine mu < X' r)%R].
-
-    Definition chain_growth_parties_event (w : nat)  :=
-    let X' := bool_trial_value LS in
-    [set r : Sc.-tuple T | ((|bestChain (t_now N - 1)%N (tree l1)| + w)%N <=
-      |bestChain (t_now N' - 1)%N (tree l2)|)%N].
-
-
-    Lemma Good_Ls_implies_chain_growth w :
-    let X' := bool_trial_value LS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    w%:R <= (1 - deltaLs) * fine mu
+      w%:R <= (1 - deltaLs) * fine mu
     ->
-    (forall r , Chain_growth_ls_Good_event r-> chain_growth_parties_event w r).
-    Proof.
-      move=> X' mu H1 r H2.
-      rewrite /chain_growth_parties_event //=.
-      apply chain_growth_parties with (p1 := p1) (p2 := p2) ; try easy.
-      rewrite /Chain_growth_ls_Good_event in H2.
-      rewrite -(ler_nat R).
-      rewrite -(LS_r_eq_slotrange r).
-      rewrite //=  in H2.
-      rewrite -/mu in H2.
-      rewrite -/LS_r in H2.
-      apply ltW in H2.
-      apply (le_trans H1).
-      apply H2.
-    Qed.
-
-
-
-    Lemma probability_implication (w : nat) :
-    let X' := bool_trial_value LS in
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    w%:R <= (1 - deltaLs) * fine mu
+      ((\X_Sc P) Chain_growth_ls_Good_event
+    <= (\X_Sc P) (chain_growth_parties_event w))%E .
+Proof.
+move=> X' mu H1.
+set B := ((1 - deltaLs) * fine mu)%R.
+apply: le_measure.
+- rewrite /Chain_growth_ls_Good_event.
+  have Hinverted : [set r | (B < X' r)%R] = ~` [set r | (X' r <= B)%R]
+    by apply/seteqP; split=> r /=; rewrite ltNge=>/negP; exact.
+  rewrite set_lt_eq_neg_le.
+  have Hle : (measurable_structure.measure_tuple_display d).-measurable
+       [set r | (X' r <= B)%R].
+  + rewrite -(ST_Set [set r | X' r <= B]).
+    by apply (measurable_fun_le (D := setT) (f := X') (g := fun _ => B)).
+    rewrite inE; apply:measurableC.
+    exact: Hle.
+- rewrite /chain_growth_parties_event.
+  case Hcmp : (((|bestChain (t_now N - 1)%N (tree l1)| + w)%N
+                 <= |bestChain (t_now N' - 1)%N (tree l2)|)%N)=>//=.
+  + by rewrite inE setT_def; exact/measurableT.
+  + by rewrite set0_def inE; exact/measurable0.
+exact/Good_Ls_implies_chain_growth/H1.
+Qed.
+
+Theorem Chernoff_bound_chain_growth_parties_even (w:nat):
+  let X' := bool_trial_value LS in
+    let mu := 'E_(\X_Sc P)[X'] in
+      w%:R <= (1 - deltaLs) * fine mu
     ->
-    let X' := bool_trial_value LS in
+  let X' := bool_trial_value LS in
     let mu := 'E_(\X_Sc P)[X'] in
-    ((\X_Sc P) Chain_growth_ls_Good_event<= (\X_Sc P)
-      (chain_growth_parties_event w))%E .
-    Proof.
-    move=> X' mu H1.
-    set B := ((1 - deltaLs) * fine mu)%R.
-    apply: le_measure.
-    -
-      rewrite /Chain_growth_ls_Good_event -/X'.
-      rewrite -/B.
-      have Hinvertedle:
-      [set r | (B < X' r)%R] = ~` [set r | (X' r <= B)%R].
-
-        apply/seteqP.
-        split.
-        - move=> r .
-          rewrite //=.
-          rewrite ltNge.
-          move/negP=> H.
-          apply H.
-        - move=> r.
-          rewrite //=.
-          rewrite ltNge.
-          move/negP=> H.
-          apply H.
-
-      rewrite set_lt_eq_neg_le.
-      have Hle :
-      (measurable_structure.measure_tuple_display d).-measurable [set r | (X' r
-        <= B)%R] .
-
-        rewrite -(ST_Set [set r | X' r <= B]).
-        apply (measurable_fun_le (D := setT) (f := X') (g := fun _ => B));
-          rewrite //=.
-
-      rewrite //=.
-      rewrite inE.
-      apply: measurableC.
-      apply Hle.
-
-    - rewrite /chain_growth_parties_event.
-      case Hcmp : (((|bestChain (t_now N - 1)%N (tree l1)| + w)%N <= |bestChain
-        (t_now N' - 1)%N (tree l2)|)%N).
-
-      + rewrite //=.
-        rewrite inE //=.
-        rewrite setT_def.
-        apply/measurableT.
-      + rewrite set0_def inE.
-        apply/measurable0.
-
-    move=>r.
-    apply Good_Ls_implies_chain_growth.
-    apply H1.
-    Qed.
-
-    Theorem Chernoff_bound_chain_growth_parties_even (w:nat):
-    let X' := bool_trial_value LS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    w%:R <= (1 - deltaLs) * fine mu
-    ->
-    let X' := bool_trial_value LS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    (
-    ((1%R)%:E - (expR (-(fine mu * deltaLs ^+ 2) / 2)%R)%:E)%E
+      (((1%R)%:E - (expR (-(fine mu * deltaLs ^+ 2) / 2)%R)%:E)%E
     <=
-    ((\X_Sc P) (chain_growth_parties_event w))%E
-    )%E.
-    Proof.
-      move=> X' mu H.
-      apply (le_trans chain_growth_bound).
-      apply (probability_implication  H).
-    Qed.
+  ((\X_Sc P) (chain_growth_parties_event w))%E)%E.
+Proof.
+move=>???; apply: (le_trans chain_growth_bound).
+exact/probability_implication.
+Qed.
 
-  End ChainGrowth.
+End ChainGrowth.
 
-
-  Lemma complementary_specialized_SS :
-    let X' := bool_trial_value SS in
+Lemma complementary_specialized_SS :
+  let X' := bool_trial_value SS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (\X_Sc P) [set i | ~~ (X' i <= (1 - deltaSs) * fine mu)%R ]%R
+      (\X_Sc P) [set i | ~~ (X' i <= (1 - deltaSs) * fine mu)%R ]%R
     =
-      let X' := bool_trial_value SS in
+  let X' := bool_trial_value SS in
     let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E -
-      (\X_Sc P) [set i | X' i <= (1 - deltaSs) * fine mu ]%R))%E.
-    Proof.
-      move=> X' mu.
-      by rewrite complementary_specialized_le.
-    Qed.
+      (((1%R)%:E - (\X_Sc P) [set i | X' i <= (1 - deltaSs) * fine mu ]%R))%E.
+Proof. by move=>??; rewrite complementary_specialized_le. Qed.
 
-    Lemma complementary_SS_bound:
+Lemma complementary_SS_bound:
+  let X' := bool_trial_value SS in
+  let mu := 'E_(\X_Sc P)[X'] in
+  (\X_Sc P) [set i | (1 - deltaSs) * fine mu <  X' i ]%R
+  =
     let X' := bool_trial_value SS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    (\X_Sc P) [set i | (1 - deltaSs) * fine mu <  X' i ]%R
-    =
-      let X' := bool_trial_value SS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E -
-      (\X_Sc P) [set i | X' i <= (1 - deltaSs) * fine mu ]%R))%E.
-    Proof.
-    move=> X' mu.
-    rewrite -complementary_specialized_SS.
-    by rewrite -(set_gt_as_compl_le).
-  Qed.
+  let mu := 'E_(\X_Sc P)[X'] in
+  (((1%R)%:E -
+    (\X_Sc P) [set i | X' i <= (1 - deltaSs) * fine mu ]%R))%E.
+Proof.
+by move=>??; rewrite -complementary_specialized_SS -(set_gt_as_compl_le).
+Qed.
 
 
+Theorem complementary_SS_event :
+  let X' := bool_trial_value SS in
+  let mu := 'E_(\X_Sc P)[X'] in
+  (((1%R)%:E -
+    (expR (-(fine mu * deltaSs ^+ 2) / 2)%R)%:E)%E
+  <=
+  (\X_Sc P)
+    [set i | (1 - deltaSs) * fine mu < X' i]%R)%E.
+Proof.
+have := (sampling_ineq3 pSs01 SS delta_range_Ss).
+rewrite /= complementary_SS_bound -leeN2.
+exact: leeD2l.
+Qed.
 
 
-  Theorem complementary_SS_event :
-    let X' := bool_trial_value SS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E -
-      (expR (-(fine mu * deltaSs ^+ 2) / 2)%R)%:E)%E
-    <=
-    (\X_Sc P)
-      [set i | (1 - deltaSs) * fine mu < X' i]%R)%E.
-    Proof.
-      rewrite /=.
-
-      have H1:= (sampling_ineq3 pSs01 SS delta_range_Ss).
-      rewrite complementary_SS_bound /=.
-      rewrite /= in H1.
-      set X' := bool_trial_value SS.
-      set mu := 'E_(\X_Sc P)[X'].
-      rewrite /mu -leeN2 in H1.
-      rewrite /mu.
-      by apply: leeD2l H1.
-    Qed.
-
-
-  Lemma complementary_specialized_AS :
+Lemma complementary_specialized_AS :
+  let X' := bool_trial_value AS in
+  let mu := 'E_(\X_Sc P)[X'] in
+  (\X_Sc P) [set i | ~~ (X' i >= (1 + deltaAs) * fine mu)%R ]%R
+  =
     let X' := bool_trial_value AS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    (\X_Sc P) [set i | ~~ (X' i >= (1 + deltaAs) * fine mu)%R ]%R
-    =
-      let X' := bool_trial_value AS in
-    let mu := 'E_(\X_Sc P)[X'] in
-    (((1%R)%:E -
-      (\X_Sc P) [set i | X' i >= (1 + deltaAs) * fine mu ]%R))%E.
-    Proof.
-      rewrite /= .
-      set X' := bool_trial_value AS.
-      set mu := 'E_(\X_Sc P)[X'].
-      set B :=  (1 + deltaAs) * fine mu.
-      set A := [set i | X' i >= B ].
-      set Pr := (\X_Sc P).
-      have  Hsame :
-      [set i | ~~ (X' i >= B )] = ~` A.
+  let mu := 'E_(\X_Sc P)[X'] in
+  (((1%R)%:E -
+    (\X_Sc P) [set i | X' i >= (1 + deltaAs) * fine mu ]%R))%E.
+Proof.
+  (* TODO: restart here !!*)
+    rewrite /= .
+    set X' := bool_trial_value AS.
+    set mu := 'E_(\X_Sc P)[X'].
+    set B :=  (1 + deltaAs) * fine mu.
+    set A := [set i | X' i >= B ].
+    set Pr := (\X_Sc P).
+    have  Hsame :
+    [set i | ~~ (X' i >= B )] = ~` A.
 
-      apply/seteqP.
-      split.
-      - move=> i Hi.
-        rewrite /A /= .
-        rewrite /= in Hi.
-        move/negP in Hi.
-        apply Hi.
-      move=> i Hi.
-      rewrite /A /= in Hi.
-      rewrite /=.
-      apply/negP.
+    apply/seteqP.
+    split.
+    - move=> i Hi.
+      rewrite /A /= .
+      rewrite /= in Hi.
+      move/negP in Hi.
       apply Hi.
+    move=> i Hi.
+    rewrite /A /= in Hi.
+    rewrite /=.
+    apply/negP.
+    apply Hi.
 
-      rewrite Hsame.
-      apply probability_setC.
-      rewrite -(ST_Set A).
-      apply: (measurable_fun_le (D := setT) (f := fun _ => B) (g :=X' )) .
-      - apply: measurableT.
-      - by rewrite //=.
-      by rewrite //=.
-    Qed.
+    rewrite Hsame.
+    apply probability_setC.
+    rewrite -(ST_Set A).
+    apply: (measurable_fun_le (D := setT) (f := fun _ => B) (g :=X' )) .
+    - apply: measurableT.
+    - by rewrite //=.
+    by rewrite //=.
+  Qed.
 
 
 Lemma complementary_AS_bound:
@@ -1499,26 +1374,3 @@ Qed.
 
   End CommonPrefix.
 End pos_proof.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

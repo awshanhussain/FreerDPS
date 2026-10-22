@@ -1,8 +1,8 @@
-From mathcomp Require Import
-     all_ssreflect.
+From mathcomp Require Import all_ssreflect.
 
 (** * Paramters
-    This file contains basic paramters for the protocol, as well as a few synononyms. 
+    This file contains basic paramters for the protocol, as well as a few
+      synononyms.
 **)
 
 Parameter Transactions : eqType.

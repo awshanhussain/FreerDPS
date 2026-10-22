@@ -1,9 +1,6 @@
-From mathcomp Require Import
-     all_ssreflect.
+From mathcomp Require Import all_ssreflect.
 
-From AUChain Require Import
-     Parameters
-     Blocks.
+From AUChain Require Import Parameters Blocks.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -11,23 +8,25 @@ Unset Printing Implicit Defensive.
 
 (**
  * Block Tree.
-   This file contains the definition of a treeType, which is the type of a blocktree. 
-   First, the [valid_chain] predicate is defined and afterwards is the treeType defined. 
+   This file contains the definition of a treeType, which is the type of a
+     blocktree.
+   First, the [valid_chain] predicate is defined and afterwards is the treeType
+     defined.
 **)
 
 (* Convenient notaiton for length of a list *)
 Notation "'|' s '|'" := (size s) (at level 20).
 
 Definition correct_block (b : Block) :=
-  Winner (bid b) (sl b). 
+  Winner (bid b) (sl b).
 
-Arguments correct_block !b /. 
+Arguments correct_block !b /.
 
-Definition correct_blocks (c : Chain) : bool := all correct_block c. 
+Definition correct_blocks (c : Chain) : bool := all correct_block c.
 
 Definition linked (b b' : Block) := pred b == HashB b'.
 
-Arguments linked !b _ /. 
+Arguments linked !b _ /.
 
 Fixpoint properly_linked (c : Chain) : bool :=
   match c with
@@ -38,19 +37,20 @@ Fixpoint properly_linked (c : Chain) : bool :=
              end
   end.
 
-Arguments properly_linked !_ : simpl nomatch. 
+Arguments properly_linked !_ : simpl nomatch.
 
-Definition lt_slots b b' := sl b > sl b'. 
+Definition lt_slots b b' := sl b > sl b'.
 
-Arguments lt_slots !b _ /. 
+Arguments lt_slots !b _ /.
 
-Definition decreasing_slots c := sorted lt_slots c. 
+Definition decreasing_slots c := sorted lt_slots c.
 
-Arguments decreasing_slots _ /. 
+Arguments decreasing_slots _ /.
 
-Definition valid_chain c := [&& correct_blocks c, properly_linked c & decreasing_slots c]. 
+Definition valid_chain c := [&& correct_blocks c, properly_linked c &
+  decreasing_slots c].
 
-Arguments valid_chain c : simpl nomatch. 
+Arguments valid_chain c : simpl nomatch.
 
 Notation "c '✓'" := (valid_chain c) (at level 20).
 
@@ -67,19 +67,22 @@ Module BlockTree.
 
           (** All blocks contains correct blocks **)
           (* ; _ : forall bp, (allBlocks (buildTree bp)) =i bp *)
-          ; _ : allBlocks tree0 =i [:: GenesisBlock] 
+          ; _ : allBlocks tree0 =i [:: GenesisBlock]
           ; _ : forall t b, allBlocks (extendTree t b) =i allBlocks t ++ [:: b]
 
           (* (** Building nothing gives the empty tree **) *)
           (* ; _ : buildTree [::] = tree0 *)
 
           (* (** Composition of build and extend **) *)
-          (* ; _ : forall b bp, extendTree (buildTree bp) b = buildTree (b :: bp) *)
+          (* ; _ : forall b bp, extendTree (buildTree bp) b = buildTree (b ::
+            bp) *)
 
           (** Selecting best chain **)
           ; _ : forall t s, valid_chain (bestChain s t)
-          ; _ : forall c s t, valid_chain c -> {subset c <= [seq b <- allBlocks t | sl b <= s]} -> |c| <= |bestChain s t|
-          ; _ : forall s t, {subset (bestChain s t) <= [seq b <- allBlocks t | sl b <= s]}
+          ; _ : forall c s t, valid_chain c -> {subset c <= [seq b <- allBlocks
+            t | sl b <= s]} -> |c| <= |bestChain s t|
+          ; _ : forall s t, {subset (bestChain s t) <= [seq b <- allBlocks t |
+            sl b <= s]}
       }.
 
   Notation class_of := mixin_of.
@@ -106,16 +109,19 @@ Module BlockTree.
       Lemma all_tree0 T : @allBlocks T tree0  =i [:: GenesisBlock].
       Proof. by case: T => ? []. Qed.
 
-      Lemma all_extend T : forall t b, @allBlocks T (extendTree t b) =i allBlocks t ++ [:: b].
+      Lemma all_extend T : forall t b, @allBlocks T (extendTree t b) =i
+        allBlocks t ++ [:: b].
       Proof. by case: T => ? []. Qed.
 
-      Lemma best_chain_valid T : forall t s, valid_chain (@bestChain T s t). 
+      Lemma best_chain_valid T : forall t s, valid_chain (@bestChain T s t).
       Proof. by case: T => ? []. Qed.
 
-      Lemma best_chain_best T : forall c s t, valid_chain c -> {subset c <= [seq b <- allBlocks t | sl b <= s]} -> |c| <= |@bestChain T s t|. 
+      Lemma best_chain_best T : forall c s t, valid_chain c -> {subset c <= [seq
+        b <- allBlocks t | sl b <= s]} -> |c| <= |@bestChain T s t|.
       Proof. by case: T => ? []. Qed.
 
-      Lemma best_chain_in_all T : forall s t, {subset (bestChain s t) <= [seq b <- @allBlocks T t | sl b <= s]}.
+      Lemma best_chain_in_all T : forall s t, {subset (bestChain s t) <= [seq b
+        <- @allBlocks T t | sl b <= s]}.
       Proof. by case: T => ? []. Qed.
 
     End BlockTreeAcc.

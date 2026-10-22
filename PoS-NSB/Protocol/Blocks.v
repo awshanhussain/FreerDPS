@@ -1,8 +1,6 @@
-From mathcomp Require Import
-     all_ssreflect.
+From mathcomp Require Import all_ssreflect.
 
-From AUChain Require Import
-     Parameters.
+From AUChain Require Import Parameters.
 From HB Require Import structures.
 
 Set Implicit Arguments.
@@ -10,7 +8,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 (** * Blocks
-    This file contain the basic record representing a block. 
+    This file contain the basic record representing a block.
 **)
 Record Block :=
   MkBlock
@@ -35,7 +33,7 @@ Lemma eq_blockP : Equality.axiom eq_block.
 Proof.
   case => sl txs pt bid; case => sl'f txs' pt' bid' .
   rewrite /eq_block.
-  do ! (case: _ /eqP; [move => -> |by constructor; case]).
+  do ! (case: _ /eqP; [move=> -> |by constructor; case]).
   by constructor.
 Qed.
 

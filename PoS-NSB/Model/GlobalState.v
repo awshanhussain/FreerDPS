@@ -1,25 +1,18 @@
-From mathcomp Require Import
-     all_ssreflect
-     finmap.
+From mathcomp Require Import all_ssreflect finmap.
 
 From AUChain Require Import
-     Parameters
-     Blocks
-     Messages
-     MessageTuple
-     BlockTree
-     LocalState.
+  Parameters Blocks Messages MessageTuple BlockTree LocalState.
 From HB Require Import structures.
-From RecordUpdate Require Import RecordUpdate. 
+From RecordUpdate Require Import RecordUpdate.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(** * Globalstate 
+(** * Globalstate
       This file contains the definition of a global state
       together, as well as definitions for some types used in the
-      definition of [GlobalState].  
+      definition of [GlobalState].
 **)
 
 (** The StateMap which is supposed to keep track of parties.
@@ -49,7 +42,7 @@ Definition honest_eq h h' :=
   end.
 
 Lemma honest_eqP : Equality.axiom honest_eq.
-Proof. by move=> [] []; apply/(iffP idP). Qed. 
+Proof. by move=> [] []; apply/(iffP idP). Qed.
 
 
 HB.instance Definition Honest_eqMixin := hasDecEq.Build Honesty honest_eqP.
@@ -68,7 +61,7 @@ Definition progress_eq p p' :=
   end.
 
 Lemma progress_eqP : Equality.axiom progress_eq.
-Proof. by move=> [] []; apply/(iffP idP). Qed. 
+Proof. by move=> [] []; apply/(iffP idP). Qed.
 
 HB.instance Definition Progress_eqMixin := hasDecEq.Build Progress progress_eqP.
 
@@ -76,7 +69,7 @@ HB.instance Definition Progress_eqMixin := hasDecEq.Build Progress progress_eqP.
 Parameter AdversarialState : Type.
 Parameter AdvState0 : AdversarialState.
 
-Definition History := seq Message. 
+Definition History := seq Message.
 
 (** ** The GlobalState  *)
 Record GlobalState :=
@@ -93,12 +86,14 @@ Record GlobalState :=
     adv_state : AdversarialState ;
     (* Execution order for the next round*)
     exec_order : Parties ;
-    (* A world state describing how far the world has progressed in this round *)
+    (* A world state describing how far the world has progressed in this round
+      *)
     progress : Progress
 }.
 
 Instance GlobalStateSettable : Settable GlobalState :=
-  settable! mkGlobalState <t_now; msg_buff; state_map; history; adv_state; exec_order; progress>. 
+  settable! mkGlobalState <t_now; msg_buff; state_map; history; adv_state;
+    exec_order; progress>.
 
 Definition tree_gb (tT : treeType) : tT := tree0.
 
@@ -106,7 +101,7 @@ Definition history0 : Messages := [::].
 
 Definition msg_id0 := 0.
 
-Parameter TreeTypeMap : Party -> treeType. 
+Parameter TreeTypeMap : Party -> treeType.
 
 (** Creates a new party with identifier pk. Is not set to new as this is
     only to be used for the initial creations of parties where everybody
@@ -116,5 +111,6 @@ Definition init_local (pk : Party): LocalState :=
   mkLocalState pk (tree_gb (TreeTypeMap pk)).
 
 Definition N0 : GlobalState :=
-  let state_map := foldr (fun pk acc => acc.[pk <- init_local pk]) state_map0 InitParties in
+  let state_map := foldr (fun pk acc => acc.[pk <- init_local pk]) state_map0
+    InitParties in
   mkGlobalState 1 [::] state_map history0 AdvState0 InitParties Ready.

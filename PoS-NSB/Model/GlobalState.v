@@ -1,7 +1,7 @@
 From mathcomp Require Import all_ssreflect finmap.
 
 From AUChain Require Import
-  Parameters Blocks Messages MessageTuple BlockTree LocalState.
+  Parameters Messages MessageTuple BlockTree LocalState.
 From HB Require Import structures.
 From RecordUpdate Require Import RecordUpdate.
 

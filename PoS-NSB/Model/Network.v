@@ -2,7 +2,6 @@ From mathcomp Require Import all_ssreflect.
 
 From AUChain Require Import GlobalState Messages MessageTuple Parameters.
 
-From mathcomp Require Import finmap.
 
 From RecordUpdate Require Import RecordSet.
 Set Implicit Arguments.

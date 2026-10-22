@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect.
 From HB Require Import structures.
-From AUChain Require Import Parameters Blocks.
+From AUChain Require Import Blocks.
 
 Set Implicit Arguments.
 Unset Strict Implicit.

@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect.
 
-From AUChain Require Import Parameters Blocks BlockTree.
+From AUChain Require Import Parameters BlockTree.
 
 From RecordUpdate Require Import RecordSet.
 

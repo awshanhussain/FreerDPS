@@ -58,6 +58,11 @@ dependencies:
     Monae
 # For PoS-Nsb
 - opam:
+    name: rocq-mathcomp-analysis-stdlib
+    version: '{>= "1.18.0"}'
+  description: |-
+    [MathComp Analysis Stdlib compatibility](https://github.com/math-comp/analysis)
+- opam:
     name: coq-record-update
     version: '{= "0.3.6"}'
   description: |-

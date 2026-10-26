@@ -69,6 +69,10 @@ Lemma set_gt_as_compl_le {I : Type} (X : I -> R) (B : R) :
     [set r : I | (B < X r)%R] = [set r : I | ~~ (B >= X r)%R].
 Proof. by apply/seteqP; split=> r //=; rewrite -ltNge.  Qed.
 
+Lemma set_lt_as_compl_ge {I : Type} (X : I -> R) (B : R) :
+    [set r : I | (X r < B)%R] = [set r : I | ~~ (B <= X r)%R].
+Proof. by apply/seteqP; split=> r //=; rewrite -ltNge. Qed.
+
 Import MeasurableR.
 Lemma complementary_specialized_le (Q : probability T R) (X: (n.-tuple T) -> R)
   (B : R) (Hm : measurable_fun setT X) :

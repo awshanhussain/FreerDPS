@@ -1,23 +1,23 @@
 # Formalization of PoS-NSB probabilistic bounds
 
-This repository contains a formaltization of the probabilistic bounds in the 
+This repository contains a formalization of the probabilistic bounds in
 the article Formalizing Nakamoto-Style Proof-of-Stake that can be found here :
 
 [Formalizing Nakamoto-Style Proof-of-Stake](https://arxiv.org/pdf/2007.12105)
 
 
 
-The formalization is currently not finished, only the probabilistic bound for the Chain Growth theorem is. 
+The formalization is currently not finished, only the probabilistic bound for the Chain Growth theorem is.
 
-You can find the bounds formalization in : 
+You can find the formalization bounds in :
 - Properties/Prob_Bounds.v
 
-I added some usefull lemmas that are used in my formalization in :
+I added some useful lemmas that are used in my formalization in :
 - Properties/additional_lemmas.v
 
 The three theorems can be found in those files :
 - Properties/CG.v (for Chain Growth)
-- Properties/CQ.v (for Chain Quality) 
+- Properties/CQ.v (for Chain Quality)
 - Properties/CP.v (for Common Prefix)
 
 
@@ -44,7 +44,7 @@ I also had to add the Rstruct_topology file that can be found here :
   - [rocq-hierarchy-builder 1.10.2](https://github.com/math-comp/hierarchy-builder)
 - Coq namespace: `AUChain`
 - Related publication(s):
-  - [Formalizing Nakamoto-Style Proof of Stake](https://arxiv.org/abs/2007.12105) 
+  - [Formalizing Nakamoto-Style Proof of Stake](https://arxiv.org/abs/2007.12105)
 
 ## Building
 The requirements can be installed via [OPAM](https://opam.ocaml.org/doc/Install.html):

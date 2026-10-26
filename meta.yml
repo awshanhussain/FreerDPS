@@ -56,4 +56,10 @@ dependencies:
     version: '{= "0.9.3" | = "dev"}'
   description: |-
     Monae
+# For PoS-Nsb
+- opam:
+    name: coq-record-update
+    version: '{= "0.3.6"}'
+  description: |-
+    [Coq record update](https://github.com/tchajed/coq-record-update)
 ---
